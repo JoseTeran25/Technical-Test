@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-th-replace="~{fragments/skeleton::layout (~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title>Search</title>
+</head>
+<body>
+
+<div class="ui fluid container " data-th-fragment="content">
+    <div class="ui padded basic segment">
+        <div class="ui padded segment" style="background-color: #007388; color: #ffffff; width: 746px;
+                                                        height: auto; padding: 42px; margin: 20px 95px 20px 95px">
+            <h2 class="ui dividing sub ">
+                Movies / Quotes search
+            </h2>
+
+            <div class="ui padded basic segment">
+                <div class="ui secondary menu">
+                    <div class="left menu">
+                        <button id="quick-search-btn" class="custom-button">QUICK SEARCH</button>
+                        <script>
+                            document.getElementById('quick-search-btn').addEventListener('click', function() {
+                                document.getElementById('search_form').style.display = 'block';
+                                document.getElementById('power-search').style.display = 'none';
+                            });
+                        </script>
+                        <button id="power-search-btn" class="custom-button">POWER SEARCH</button>
+                        <script>
+
+                            document.getElementById('power-search-btn').addEventListener('click', function() {
+
+                                document.getElementById('search_form').style.display = 'none';
+                                document.getElementById('power-search').style.display = 'block';
+                            });
+                        </script>
+                    </div>
+                </div>
+                <form data-th-action="@{/search}" class="ui form" method="post" id="search_form" style="margin-right: 50px; display: none;">
+                    <div class="ui search item">
+                        <div class="ui icon input" style="width: 100%">
+                            <input class="prompt" type="text" placeholder="Search..." name="q" id="q" data-th-value="${q}"
+                                   autofocus="autofocus"/>
+                            <button class="ui teal icon button">
+                                <i class="search icon"></i>Filter
+                            </button>
+                        </div>
+                        <div class="results"></div>
+                        <script>
+                            $('.ui.search')
+                                .search({
+                                    apiSettings: {
+                                        url: '/api/search?q={query}'
+                                    },
+                                    minCharacters: 2
+                                });
+
+                        </script>
+                    </div>
+                </form>
+                <form data-th-action="@{/advancedSearch}" class="ui form" method="post" id="power-search" style="display: none;">
+                    <input type="hidden" name="searchType" value="power">
+                    <div class="fields">
+                        <div class="field">
+                            <label for="type">TYPE</label>
+                            <select name="type" id="type" class="ui dropdown">
+                                <option value="">Select Type</option>
+                                <option th:each="type : ${types}" th:value="${type}" th:text="${type}"></option>
+                            </select>
+                            <script>
+
+                            </script>
+                        </div>
+                        <div class="field">
+                            <label for="movie">MOVIE</label>
+                            <select name="movie" id="movie" class="ui dropdown">
+                                <option value="">Select Movie</option>
+                                <option th:each="movie : ${movies}" th:value="${movie.title}" th:text="${movie.title}"></option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="actor">ACTOR</label>
+                            <select name="actor" id="actor" class="ui dropdown">
+                                <option value="">Select ACTOR</option>
+                                <option th:each="actor : ${actors}" th:value="${actor.name}" th:text="${actor.name}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fields">
+
+                        <div class="field">
+                            <label for="actor">AUTHOR</label>
+                            <select name="author" id="author" class="ui dropdown">
+                                <option value="">Select AUTHOR</option>
+                                <option th:each="author : ${authors}" th:value="${author}" th:text="${author}"></option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="genre">GENRE</label>
+                            <select name="genre" id="genre" class="ui dropdown">
+                                <option value="">Select GENRE</option>
+                                <option th:each="genre : ${genres}" th:value="${genre}" th:text="${genre}"></option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="keyword">Search Keywords</label>
+                            <input type="text" name="keyword" id="keyword" placeholder="Keywords">
+                        </div>
+
+                    </div>
+                    <div class="fields">
+                        <button class="ui teal icon button" type="submit">
+                            <i class="search icon"></i>Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="ui segment" style="margin:0 95px 0 95px;" data-th-if="${docs}">
+            <table class="ui small table" data-th-if="${not #lists.isEmpty(docs)}">
+                <thead>
+                <tr>
+                    <th>type</th>
+                    <th>title</th>
+                    <th>description</th>
+                    <th>meta</th>
+                    <th>ranking</th>
+                </tr>
+                </thead>
+
+                <tbody class="results">
+                <tr data-th-each="d: ${docs}">
+                    <td><a data-th-href="${d.url}" data-th-text="${d.type}">link</a></td>
+                    <td data-th-utext="${d.title}"></td>
+                    <td data-th-utext="${d.description}"></td>
+                    <td data-th-utext="${d.meta}"></td>
+                    <td data-th-text="${d.ranking}"></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="ui container" data-th-if="${#lists.isEmpty(docs)}">
+                <div class="ui warning message">
+                    <div class="ui dividing sub header">
+                        Nothing found!
+                    </div>
+                    <div data-th-remove="tag" data-th-if="${misspelling}">
+                        <span data-th-if="${not #lists.isEmpty(misspelling)}">Did you mean?</span>
+                        <div class="ui relaxed divided link list">
+                            <a data-th-attr="onclick=|search_misspelled('${m.word}')|" class="item" data-th-each="m : ${misspelling}"
+                               data-th-text="${m.word}">
+                                suggestion
+                            </a>
+                            <script>
+                                function search_misspelled(correct){
+                                    document.getElementById('q').value = correct;
+                                    document.getElementById('search_form').submit();
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+
+</script>
+
+</body>
+</html>
